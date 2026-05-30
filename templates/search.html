@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>영화정보</title>
+
+    <style>
+        body {
+            font-family: Arial, "맑은 고딕", sans-serif;
+            margin: 0;
+            color: #333;
+        }
+
+        .page-title {
+            padding: 24px 32px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .notice-box {
+            margin: 0 32px 24px 32px;
+            padding: 24px 28px;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .search-area {
+            border-top: 1px solid #aaa;
+            border-bottom: 1px solid #aaa;
+            padding: 36px 32px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 90px 370px 90px 370px 160px;
+            gap: 12px 16px;
+            align-items: center;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        input, select {
+            height: 30px;
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            box-sizing: border-box;
+        }
+
+        input[type="radio"] {
+            height: auto;
+            margin: 0 4px 0 0;
+            padding: 0;
+        }
+
+        .text-input {
+            width: 365px;
+        }
+
+        .field-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 14px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .small-input {
+            width: 150px;
+        }
+
+        .button-group {
+            grid-row: span 4;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-btn {
+            width: 70px;
+            height: 48px;
+            border: none;
+            background-color: #4d67d8;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .reset-btn {
+            width: 70px;
+            height: 48px;
+            border: none;
+            background-color: #555;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .result-area {
+            padding: 28px 32px;
+        }
+
+        .result-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .count {
+            font-weight: bold;
+        }
+
+        .count strong {
+            color: #000;
+        }
+
+        .sort-box {
+            height: 34px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+            border-top: 2px solid #4d67d8;
+        }
+
+        th {
+            height: 42px;
+            border: 1px solid #ddd;
+            border-bottom: 2px solid #333;
+            background-color: #f6f6f6;
+            font-weight: bold;
+        }
+
+        td {
+            height: 38px;
+            border: 1px solid #ddd;
+            padding: 6px 10px;
+            text-align: center;
+        }
+
+        td.title {
+            text-align: left;
+        }
+
+        td.ellipsis {
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty-message {
+            padding: 30px;
+            text-align: center;
+            color: #777;
+        }
+
+        .error-message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border: 1px solid #e0a2a2;
+            background-color: #fff4f4;
+            color: #9b1c1c;
+            font-size: 14px;
+        }
+
+        .pagination {
+            margin-top: 28px;
+            text-align: center;
+        }
+
+        .pagination button,
+        .pagination strong {
+            height: 32px;
+            margin: 0 2px;
+            padding: 0 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination strong {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-bottom: 1px solid #333;
+            font-weight: bold;
+            cursor: default;
+        }
+
+        .pagination button:hover {
+            border-color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page-title">영화정보</div>
+
+<div class="notice-box">
+    <ul>
+        <li>KOBIS 영화정보 검색 화면을 참고하여 구현한 영화 데이터베이스 검색 시스템입니다.</li>
+        <li>영화명, 감독명, 제작연도를 검색 조건으로 사용할 수 있습니다.</li>
+        <li>개봉일자는 원본 엑셀 데이터에 포함되어 있지 않아 화면 입력 항목으로만 구성하였습니다.</li>
+    </ul>
+</div>
+
+<form method="GET" action="/">
+    <div class="search-area">
+        <div class="search-grid">
+
+            <div class="label">ㆍ영화명</div>
+            <div class="field-block">
+                <input class="text-input" type="text" name="title" value="{{ request.args.get('title', '') }}">
+                <div class="radio-group">
+                    {% set movie_mode = request.args.get('movie_search_mode', 'contains') %}
+                    <label>
+                        <input type="radio" name="movie_search_mode" value="contains"
+                        {% if movie_mode != 'prefix' %}checked{% endif %}>
+                        포함 검색
+                    </label>
+                    <label>
+                        <input type="radio" name="movie_search_mode" value="prefix"
+                        {% if movie_mode == 'prefix' %}checked{% endif %}>
+                        접두어 검색
+                    </label>
+                </div>
+            </div>
+
+            <div class="label">ㆍ감독명</div>
+            <div class="field-block">
+                <input class="text-input" type="text" name="director" value="{{ request.args.get('director', '') }}">
+                <div class="radio-group">
+                    {% set director_mode = request.args.get('director_search_mode', 'contains') %}
+                    <label>
+                        <input type="radio" name="director_search_mode" value="contains"
+                        {% if director_mode != 'prefix' %}checked{% endif %}>
+                        포함 검색
+                    </label>
+                    <label>
+                        <input type="radio" name="director_search_mode" value="prefix"
+                        {% if director_mode == 'prefix' %}checked{% endif %}>
+                        접두어 검색
+                    </label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="search-btn" type="submit">조회</button>
+                <button class="reset-btn" type="button" onclick="clearSearchForm()">초기화</button>
+            </div>
+
+            <div class="label">ㆍ제작연도</div>
+            <div>
+                <select name="start_year">
+                    <option value="">--전체--</option>
+
+                    {% for year in range(2026, 1927, -1) %}
+                        <option value="{{ year }}"
+                        {% if request.args.get('start_year') == year|string %}
+                        selected
+                        {% endif %}
+                        >
+                            {{ year }}
+                        </option>
+                    {% endfor %}
+                </select>
+                ~
+                <select name="end_year">
+                    <option value="">--전체--</option>
+
+                    {% for year in range(2026, 1927, -1) %}
+                        <option value="{{ year }}"
+                        {% if request.args.get('end_year') == year|string %}
+                        selected
+                        {% endif %}
+                        >
+                            {{ year }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="label">ㆍ개봉일자</div>
+            <div>
+                <input class="small-input" type="date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                ~
+                <input class="small-input" type="date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="result-area">
+    {% if db_error %}
+    <div class="error-message">{{ db_error }}</div>
+    {% endif %}
+
+    <div class="result-top">
+        <div class="count">총 <strong>{{ result_count }}</strong>건</div>
+
+        <select
+            id="sort"
+            name="sort"
+            class="sort-box"
+        >
+            <option value="update_desc"
+                {% if request.args.get('sort') == 'update_desc' %}
+                selected
+                {% endif %}
+            >
+                최신업데이트순
+            </option>
+            <option value="year_desc"
+                {% if request.args.get('sort') == 'year_desc' %}
+                selected
+                {% endif %}
+            >
+                제작연도순
+            </option>
+            <option value="name_asc"
+                {% if request.args.get('sort') == 'name_asc' %}
+                selected
+                {% endif %}
+            >
+                영화명순(ㄱ~Z)순
+            </option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>영화명</th>
+            <th>영화명(영문)</th>
+            <th>영화코드</th>
+            <th>제작연도</th>
+            <th>제작국가</th>
+            <th>유형</th>
+            <th>장르</th>
+            <th>제작상태</th>
+            <th>감독</th>
+            <th>제작사</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% if results %}
+            {% for movie in results %}
+            <tr>
+                <td class="title">{{ movie.movie_name or '' }}</td>
+                <td class="title ellipsis">{{ movie.movie_name_en or '' }}</td>
+                <td>{{ movie.movie_id or '' }}</td>
+                <td>{{ movie.production_year or '' }}</td>
+                <td>{{ movie.production_country or '' }}</td>
+                <td>{{ movie.movie_type or '' }}</td>
+                <td>{{ movie.genre or '' }}</td>
+                <td>{{ movie.production_status or '' }}</td>
+                <td class="ellipsis">{{ movie.director or '' }}</td>
+                <td class="ellipsis">{{ movie.production_company or '' }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td class="empty-message" colspan="10">검색 결과가 없습니다.</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        {% set block_size = 10 %}
+        {% set start_page = ((page - 1) // block_size) * block_size + 1 %}
+        {% set end_page = start_page + block_size - 1 %}
+        {% if end_page > total_pages %}
+            {% set end_page = total_pages %}
+        {% endif %}
+
+        <button type="button" onclick="goPage(1)">&lt;&lt;</button>
+        <button type="button" onclick="goPage({{ start_page - 1 if page > 1 else 1 }})">&lt;</button>
+
+        {% for p in range(start_page, end_page + 1) %}
+            {% if p == page %}
+                <strong>{{ p }}</strong>
+            {% else %}
+                <button type="button" onclick="goPage({{ p }})">{{ p }}</button>
+            {% endif %}
+        {% endfor %}
+
+        <button type="button" onclick="goPage({{ end_page + 1 if page < total_pages else total_pages }})">&gt;</button>
+        <button type="button" onclick="goPage({{ total_pages }})">&gt;&gt;</button>
+    </div>
+
+    <script>
+        function goPage(page) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("page", page);
+            window.location.href = url.toString();
+        }
+
+        const sortSelect = document.getElementById("sort");
+
+        if (sortSelect) {
+            sortSelect.addEventListener("change", function () {
+                const url = new URL(window.location.href);
+                url.searchParams.set("sort", this.value);
+                url.searchParams.set("page", 1);
+                window.location.href = url.toString();
+            });
+        }
+
+        function clearSearchForm() {
+            window.location.href = "/";
+        }
+    </script>
+
+</div>
+
+</body>
+</html>

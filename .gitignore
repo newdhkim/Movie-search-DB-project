@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Excel 원본
+*.xls
+*.xlsx
+
+# IDE
+.vscode/
+.idea/
+
+# Mac
+.DS_Store
