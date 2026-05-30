@@ -62,7 +62,14 @@ def sort_sql(sort):
         return "m.production_year DESC, m.movie_id DESC"
 
     if sort == "name_asc":
-        return "m.movie_name ASC, m.movie_id DESC"
+        return """CASE
+            WHEN m.movie_name REGEXP '^[가-힣]' THEN 0
+            WHEN m.movie_name REGEXP '^[A-Za-z]' THEN 1
+            WHEN m.movie_name REGEXP '^[0-9]' THEN 2
+            ELSE 3
+        END,
+        m.movie_name ASC,
+        m.movie_id DESC"""
 
     return "m.movie_id DESC"
 
@@ -196,3 +203,4 @@ def count_movies(
         return row["total_count"]
     finally:
         close_db(conn, cur)
+
