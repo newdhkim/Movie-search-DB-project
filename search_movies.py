@@ -1,4 +1,4 @@
-from db_connect import open_db, close_db
+﻿from db_connect import open_db, close_db
 
 
 def is_empty(value):
@@ -24,6 +24,49 @@ def make_like_pattern(value, mode):
     return f"%{keyword}%"
 
 
+def build_filter_sql(
+    title=None,
+    director=None,
+    start_year=None,
+    end_year=None,
+    movie_search_mode="contains",
+    director_search_mode="contains"
+):
+    joins = []
+    where = ["1=1"]
+    params = []
+
+    if not is_empty(director):
+        joins.append("LEFT JOIN movie_director md ON m.movie_id = md.movie_id")
+        joins.append("LEFT JOIN director d ON md.director_id = d.director_id")
+        where.append("d.director_name LIKE %s")
+        params.append(make_like_pattern(director, director_search_mode))
+
+    if not is_empty(title):
+        where.append("m.movie_name LIKE %s")
+        params.append(make_like_pattern(title, movie_search_mode))
+
+    if start_year is not None:
+        where.append("m.production_year >= %s")
+        params.append(start_year)
+
+    if end_year is not None:
+        where.append("m.production_year <= %s")
+        params.append(end_year)
+
+    return "\n".join(joins), " AND ".join(where), params
+
+
+def sort_sql(sort):
+    if sort == "year_desc":
+        return "m.production_year DESC, m.movie_id DESC"
+
+    if sort == "name_asc":
+        return "m.movie_name ASC, m.movie_id DESC"
+
+    return "m.movie_id DESC"
+
+
 def search_movies(
     title=None,
     director=None,
@@ -40,8 +83,40 @@ def search_movies(
     try:
         start_year = parse_year(start_year)
         end_year = parse_year(end_year)
+        offset = (page - 1) * page_size
 
-        sql = """
+        joins, where_sql, params = build_filter_sql(
+            title=title,
+            director=director,
+            start_year=start_year,
+            end_year=end_year,
+            movie_search_mode=movie_search_mode,
+            director_search_mode=director_search_mode
+        )
+
+        # 먼저 현재 페이지에 필요한 movie_id만 가져온다.
+        # 이렇게 해야 전체 119,104건을 모두 JOIN/GROUP BY 한 뒤 LIMIT 하는 비용을 피할 수 있다.
+        page_sql = f"""
+            SELECT DISTINCT
+                m.movie_id,
+                m.movie_name,
+                m.production_year
+            FROM movie m
+            {joins}
+            WHERE {where_sql}
+            ORDER BY {sort_sql(sort)}
+            LIMIT %s OFFSET %s
+        """
+        cur.execute(page_sql, params + [page_size, offset])
+        page_rows = cur.fetchall()
+        movie_ids = [row["movie_id"] for row in page_rows]
+
+        if not movie_ids:
+            return []
+
+        id_placeholders = ", ".join(["%s"] * len(movie_ids))
+
+        detail_sql = f"""
             SELECT
                 m.movie_id,
                 m.movie_name,
@@ -62,28 +137,7 @@ def search_movies(
             LEFT JOIN nation n ON mn.nation_id = n.nation_id
             LEFT JOIN movie_company mc ON m.movie_id = mc.movie_id
             LEFT JOIN company c ON mc.company_id = c.company_id
-            WHERE 1=1
-        """
-
-        params = []
-
-        if not is_empty(title):
-            sql += " AND m.movie_name LIKE %s"
-            params.append(make_like_pattern(title, movie_search_mode))
-
-        if not is_empty(director):
-            sql += " AND d.director_name LIKE %s"
-            params.append(make_like_pattern(director, director_search_mode))
-
-        if start_year is not None:
-            sql += " AND m.production_year >= %s"
-            params.append(start_year)
-
-        if end_year is not None:
-            sql += " AND m.production_year <= %s"
-            params.append(end_year)
-
-        sql += """
+            WHERE m.movie_id IN ({id_placeholders})
             GROUP BY
                 m.movie_id,
                 m.movie_name,
@@ -91,33 +145,19 @@ def search_movies(
                 m.production_year,
                 m.movie_type,
                 m.production_status
+            ORDER BY FIELD(m.movie_id, {id_placeholders})
         """
 
-        if sort == "year_desc":
-            sql += " ORDER BY m.production_year DESC"
-        
-        elif sort == "name_asc":
-            sql += " ORDER BY m.movie_name ASC"
-
-        else:
-            sql += " ORDER BY m.movie_id DESC"
-
-        offset = (page - 1) * page_size
-
-        sql += " LIMIT %s OFFSET %s"
-
-        params.append(page_size)
-        params.append(offset)
-
-        cur.execute(sql, params)
+        cur.execute(detail_sql, movie_ids + movie_ids)
         return cur.fetchall()
     finally:
         close_db(conn, cur)
 
+
 def count_movies(
-        title=None, 
-        director=None, 
-        start_year=None, 
+        title=None,
+        director=None,
+        start_year=None,
         end_year=None,
         movie_search_mode="contains",
         director_search_mode="contains"
@@ -128,40 +168,31 @@ def count_movies(
         start_year = parse_year(start_year)
         end_year = parse_year(end_year)
 
-        sql = """
-            SELECT COUNT(DISTINCT m.movie_id) AS total_count
-            FROM movie m
-            LEFT JOIN movie_director md ON m.movie_id = md.movie_id
-            LEFT JOIN director d ON md.director_id = d.director_id
-            WHERE 1=1
-        """
+        joins, where_sql, params = build_filter_sql(
+            title=title,
+            director=director,
+            start_year=start_year,
+            end_year=end_year,
+            movie_search_mode=movie_search_mode,
+            director_search_mode=director_search_mode
+        )
 
-        params = []
-
-        if not is_empty(title):
-            sql += " AND m.movie_name LIKE %s"
-            params.append(make_like_pattern(title, movie_search_mode))
-
-        if not is_empty(director):
-            sql += " AND d.director_name LIKE %s"
-            params.append(make_like_pattern(director, director_search_mode))
-
-        if start_year is not None:
-            sql += " AND m.production_year >= %s"
-            params.append(start_year)
-
-        if end_year is not None:
-            sql += " AND m.production_year <= %s"
-            params.append(end_year)
+        if is_empty(director):
+            sql = f"""
+                SELECT COUNT(*) AS total_count
+                FROM movie m
+                WHERE {where_sql}
+            """
+        else:
+            sql = f"""
+                SELECT COUNT(DISTINCT m.movie_id) AS total_count
+                FROM movie m
+                {joins}
+                WHERE {where_sql}
+            """
 
         cur.execute(sql, params)
         row = cur.fetchone()
         return row["total_count"]
     finally:
         close_db(conn, cur)
-
-# if __name__ == "__main__":
-#     result = search_movies(title="워페어")
-
-#     for row in result:
-#         print(row)

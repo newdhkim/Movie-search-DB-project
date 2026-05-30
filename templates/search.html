@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -105,6 +105,10 @@
         .reset-btn {
             width: 70px;
             height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
             border: none;
             background-color: #555;
             color: white;
@@ -270,7 +274,7 @@
 
             <div class="button-group">
                 <button class="search-btn" type="submit">조회</button>
-                <button class="reset-btn" type="button" onclick="clearSearchForm()">초기화</button>
+                <button id="reset-button" class="reset-btn" type="button" onclick="clearSearchForm(event); return false;">초기화</button>
             </div>
 
             <div class="label">ㆍ제작연도</div>
@@ -432,12 +436,41 @@
             });
         }
 
-        function clearSearchForm() {
-            window.location.href = "/";
+        const resetButton = document.getElementById("reset-button");
+
+        if (resetButton) {
+            resetButton.addEventListener("click", function (event) {
+                clearSearchForm(event);
+            });
+        }
+        function clearSearchForm(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const form = document.querySelector("form");
+
+            form.querySelectorAll("input[type='text'], input[type='date']").forEach(input => {
+                input.value = "";
+            });
+
+            form.querySelectorAll("select").forEach(select => {
+                select.selectedIndex = 0;
+            });
+
+            const movieContains = form.querySelector("input[name='movie_search_mode'][value='contains']");
+            const directorContains = form.querySelector("input[name='director_search_mode'][value='contains']");
+
+            if (movieContains) {
+                movieContains.checked = true;
+            }
+
+            if (directorContains) {
+                directorContains.checked = true;
+            }
         }
     </script>
 
 </div>
 
 </body>
-</html>
