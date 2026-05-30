@@ -43,7 +43,7 @@ def build_filter_sql(
         params.append(make_like_pattern(director, director_search_mode))
 
     if not is_empty(title):
-        where.append("m.movie_name LIKE %s")
+        where.append(f"{movie_name_sql()} LIKE %s")
         params.append(make_like_pattern(title, movie_search_mode))
 
     if start_year is not None:
@@ -57,18 +57,22 @@ def build_filter_sql(
     return "\n".join(joins), " AND ".join(where), params
 
 
+def movie_name_sql():
+    return "REPLACE(m.movie_name, '\ufeff', '')"
+
+
 def sort_sql(sort):
     if sort == "year_desc":
         return "m.production_year DESC, m.movie_id DESC"
 
     if sort == "name_asc":
         return """CASE
-            WHEN m.movie_name REGEXP '^[가-힣]' THEN 0
-            WHEN m.movie_name REGEXP '^[A-Za-z]' THEN 1
-            WHEN m.movie_name REGEXP '^[0-9]' THEN 2
+            WHEN REPLACE(m.movie_name, '﻿', '') REGEXP '^[가-힣]' THEN 0
+            WHEN REPLACE(m.movie_name, '﻿', '') REGEXP '^[A-Za-z]' THEN 1
+            WHEN REPLACE(m.movie_name, '﻿', '') REGEXP '^[0-9]' THEN 2
             ELSE 3
         END,
-        m.movie_name ASC,
+        REPLACE(m.movie_name, '﻿', '') ASC,
         m.movie_id DESC"""
 
     return "m.movie_id DESC"
@@ -104,13 +108,14 @@ def search_movies(
         # 먼저 현재 페이지에 필요한 movie_id만 가져온다.
         # 이렇게 해야 전체 119,104건을 모두 JOIN/GROUP BY 한 뒤 LIMIT 하는 비용을 피할 수 있다.
         page_sql = f"""
-            SELECT DISTINCT
+            SELECT
                 m.movie_id,
-                m.movie_name,
+                REPLACE(m.movie_name, '﻿', '') AS movie_name,
                 m.production_year
             FROM movie m
             {joins}
             WHERE {where_sql}
+            GROUP BY m.movie_id, m.movie_name, m.production_year
             ORDER BY {sort_sql(sort)}
             LIMIT %s OFFSET %s
         """
@@ -126,7 +131,7 @@ def search_movies(
         detail_sql = f"""
             SELECT
                 m.movie_id,
-                m.movie_name,
+                REPLACE(m.movie_name, '﻿', '') AS movie_name,
                 m.movie_name_en,
                 m.production_year,
                 GROUP_CONCAT(DISTINCT n.nation_name ORDER BY n.nation_name SEPARATOR ', ') AS production_country,
@@ -147,7 +152,7 @@ def search_movies(
             WHERE m.movie_id IN ({id_placeholders})
             GROUP BY
                 m.movie_id,
-                m.movie_name,
+                REPLACE(m.movie_name, '﻿', ''),
                 m.movie_name_en,
                 m.production_year,
                 m.movie_type,
@@ -203,4 +208,10 @@ def count_movies(
         return row["total_count"]
     finally:
         close_db(conn, cur)
+
+
+
+
+
+
 
