@@ -1,0 +1,6 @@
+﻿Flask
+PyMySQL
+gunicorn
+pandas
+xlrd
+cryptography

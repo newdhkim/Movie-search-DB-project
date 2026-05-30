@@ -35,6 +35,7 @@ def open_db(dbname=None):
                            passwd=os.getenv("DB_PASSWORD", ""),
                            db=dbname or os.getenv("DB_NAME", "movie_db"),
                            port=int(os.getenv("DB_PORT", "3306")),
+                           charset="utf8mb4",
                            client_flag=MULTI_STATEMENTS)
     cur = conn.cursor(pymysql.cursors.DictCursor)
 
