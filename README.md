@@ -30,3 +30,7 @@ KOBIS 영화정보 데이터를 활용한 영화 검색 시스템
 05_create_index.py
 
 python app.py
+
+## URL
+
+http://54.234.249.215/
