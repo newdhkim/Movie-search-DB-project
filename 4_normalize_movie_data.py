@@ -12,6 +12,18 @@ def split_values(value):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def clean_text(value):
+    if value is None:
+        return None
+
+    return (
+        str(value)
+        .replace("\ufeff", "")  # BOM
+        .replace("\u200b", "")  # zero-width space
+        .strip()
+    )
+
+
 def get_or_create(cur, cache, table_name, id_col, name_col, value):
     if value in cache:
         return cache[value]
@@ -80,11 +92,11 @@ def main():
             )
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (
-            row["movie_name"],
-            row["movie_name_en"],
+            clean_text(row["movie_name"]),
+            clean_text(row["movie_name_en"]),
             row["production_year"],
-            row["movie_type"],
-            row["production_status"],
+            clean_text(row["movie_type"]),
+            clean_text(row["production_status"]),
             row["movie_info_id"]
         ))
 
