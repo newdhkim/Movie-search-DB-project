@@ -60,19 +60,39 @@ def movie_name_sql():
     return "m.movie_name"
 
 
+def clean_movie_name_sql():
+    return """TRIM(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(m.movie_name,
+                CONVERT(UNHEX('EFBBBF') USING utf8mb4), ''),
+                CONVERT(UNHEX('E2808B') USING utf8mb4), ''),
+                CONVERT(UNHEX('E2808C') USING utf8mb4), ''),
+                CONVERT(UNHEX('E2808D') USING utf8mb4), ''),
+                CONVERT(UNHEX('E281A0') USING utf8mb4), ''),
+                CONVERT(UNHEX('C2A0') USING utf8mb4), ' '),
+                CONVERT(UNHEX('E38080') USING utf8mb4), ' ')
+        )"""
+
+
 def sort_sql(sort):
     if sort == "year_desc":
         return "m.production_year DESC, m.movie_id DESC"
 
     if sort == "name_asc":
+        clean_name = clean_movie_name_sql()
         return """CASE
-            WHEN HEX(LEFT(TRIM(m.movie_name), 1)) BETWEEN 'EAB080' AND 'ED9EA3' THEN 0
-            WHEN HEX(LEFT(UPPER(TRIM(m.movie_name)), 1)) BETWEEN '41' AND '5A' THEN 1
-            WHEN HEX(LEFT(TRIM(m.movie_name), 1)) BETWEEN '30' AND '39' THEN 2
+            WHEN HEX(LEFT({clean_name}, 1)) BETWEEN 'EAB080' AND 'ED9EA3' THEN 0
+            WHEN HEX(LEFT(UPPER({clean_name}), 1)) BETWEEN '41' AND '5A' THEN 1
+            WHEN HEX(LEFT({clean_name}, 1)) BETWEEN '30' AND '39' THEN 2
             ELSE 3
         END,
-        m.movie_name ASC,
-        m.movie_id DESC"""
+        {clean_name} ASC,
+        m.movie_id DESC""".format(clean_name=clean_name)
 
     return "m.movie_id DESC"
 

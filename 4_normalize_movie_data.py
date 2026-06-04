@@ -20,6 +20,11 @@ def clean_text(value):
         str(value)
         .replace("\ufeff", "")  # BOM
         .replace("\u200b", "")  # zero-width space
+        .replace("\u200c", "")  # zero-width non-joiner
+        .replace("\u200d", "")  # zero-width joiner
+        .replace("\u2060", "")  # word joiner
+        .replace("\u00a0", " ")  # non-breaking space
+        .replace("\u3000", " ")  # ideographic space
         .strip()
     )
 
