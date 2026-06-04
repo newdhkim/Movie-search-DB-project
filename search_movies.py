@@ -62,7 +62,7 @@ def movie_name_sql():
 
 
 def director_select_sql(director=None, director_search_mode="contains"):
-    if is_empty(director):
+    if is_empty(director) or director_search_mode != "prefix":
         return "GROUP_CONCAT(DISTINCT d.director_name ORDER BY d.director_name SEPARATOR ', ') AS director", []
 
     return """
