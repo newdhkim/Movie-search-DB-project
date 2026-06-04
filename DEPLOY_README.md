@@ -154,9 +154,45 @@ sudo systemctl status kobis-movie-db
 sudo systemctl status nginx
 ```
 
+## 12. GitHub Actions CI/CD
+
+`.github/workflows/deploy.yml`은 `main` 또는 `master` 브랜치에 push될 때 다음 순서로 실행됩니다.
+
+1. Python 파일 문법 검사
+2. EC2 서버에 SSH 접속
+3. 서버의 프로젝트 폴더에서 최신 코드 반영
+4. `requirements.txt` 기반 의존성 설치
+5. `kobis-movie-db` systemd 서비스 재시작
+
+GitHub 저장소의 `Settings > Secrets and variables > Actions`에 다음 Secrets를 등록합니다.
+
+```text
+EC2_HOST=EC2 퍼블릭 IP 또는 도메인
+EC2_USER=ubuntu
+EC2_SSH_KEY=EC2 접속용 private key 전체 내용
+EC2_APP_DIR=/home/ubuntu/kobis-movie-db
+EC2_SERVICE_NAME=kobis-movie-db
+```
+
+`EC2_APP_DIR`와 `EC2_SERVICE_NAME`은 선택값입니다. 등록하지 않으면 각각 `/home/ubuntu/kobis-movie-db`, `kobis-movie-db`를 기본값으로 사용합니다.
+
+서버에서는 최초 1회 배포 준비가 되어 있어야 합니다.
+
+```bash
+cd /home/ubuntu
+git clone <your-repository-url> kobis-movie-db
+cd kobis-movie-db
+cp .env.example .env
+nano .env
+sudo cp deploy/kobis-movie-db.service /etc/systemd/system/kobis-movie-db.service
+sudo systemctl daemon-reload
+sudo systemctl enable kobis-movie-db
+```
+
 ## 주의사항
 
 - `app.py`의 직접 실행 모드는 기본적으로 `debug=False`입니다.
 - 운영 환경에서는 `.env`를 Git에 올리지 않습니다.
 - EC2 보안 그룹에서 5000번 포트를 열지 않습니다.
 - MySQL은 `localhost` 접속만 사용합니다.
+- GitHub Actions는 `.env`와 DB 데이터 적재를 자동으로 수행하지 않습니다. 운영 DB 설정과 초기 데이터 적재는 서버에서 최초 1회 직접 수행합니다.

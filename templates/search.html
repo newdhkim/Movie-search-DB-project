@@ -80,12 +80,8 @@
             white-space: nowrap;
         }
 
-        .small-input {
-            width: 150px;
-        }
-
         .button-group {
-            grid-row: span 4;
+            grid-row: span 2;
             display: flex;
             gap: 6px;
             align-items: center;
@@ -228,7 +224,6 @@
     <ul>
         <li>KOBIS 영화정보 검색 화면을 참고하여 구현한 영화 데이터베이스 검색 시스템입니다.</li>
         <li>영화명, 감독명, 제작연도를 검색 조건으로 사용할 수 있습니다.</li>
-        <li>개봉일자는 원본 엑셀 데이터에 포함되어 있지 않아 화면 입력 항목으로만 구성하였습니다.</li>
     </ul>
 </div>
 
@@ -306,13 +301,6 @@
                         </option>
                     {% endfor %}
                 </select>
-            </div>
-
-            <div class="label">ㆍ개봉일자</div>
-            <div>
-                <input class="small-input" type="date" name="start_date" value="{{ request.args.get('start_date', '') }}">
-                ~
-                <input class="small-input" type="date" name="end_date" value="{{ request.args.get('end_date', '') }}">
             </div>
         </div>
     </div>
@@ -450,7 +438,7 @@
             }
             const form = document.querySelector("form");
 
-            form.querySelectorAll("input[type='text'], input[type='date']").forEach(input => {
+            form.querySelectorAll("input[type='text']").forEach(input => {
                 input.value = "";
             });
 
