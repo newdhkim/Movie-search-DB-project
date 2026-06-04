@@ -29,8 +29,7 @@ def build_filter_sql(
     director=None,
     start_year=None,
     end_year=None,
-    movie_search_mode="contains",
-    director_search_mode="contains"
+    movie_search_mode="contains"
 ):
     joins = []
     where = ["1=1"]
@@ -40,7 +39,7 @@ def build_filter_sql(
         joins.append("LEFT JOIN movie_director md ON m.movie_id = md.movie_id")
         joins.append("LEFT JOIN director d ON md.director_id = d.director_id")
         where.append("d.director_name LIKE %s")
-        params.append(make_like_pattern(director, director_search_mode))
+        params.append(make_like_pattern(director, "contains"))
 
     if not is_empty(title):
         where.append(f"{movie_name_sql()} LIKE %s")
@@ -59,22 +58,6 @@ def build_filter_sql(
 
 def movie_name_sql():
     return "m.movie_name"
-
-
-def director_select_sql(director=None, director_search_mode="contains"):
-    if is_empty(director) or director_search_mode != "prefix":
-        return "GROUP_CONCAT(DISTINCT d.director_name ORDER BY d.director_name SEPARATOR ', ') AS director", []
-
-    return """
-                GROUP_CONCAT(
-                    DISTINCT CASE
-                        WHEN d.director_name LIKE %s THEN d.director_name
-                        ELSE NULL
-                    END
-                    ORDER BY d.director_name
-                    SEPARATOR ', '
-                ) AS director
-            """, [make_like_pattern(director, director_search_mode)]
 
 
 def sort_sql(sort):
@@ -102,8 +85,7 @@ def search_movies(
     sort=None,
     page=1,
     page_size=10,
-    movie_search_mode="contains",
-    director_search_mode="contains"
+    movie_search_mode="contains"
 ):
     conn, cur = open_db()
 
@@ -117,8 +99,7 @@ def search_movies(
             director=director,
             start_year=start_year,
             end_year=end_year,
-            movie_search_mode=movie_search_mode,
-            director_search_mode=director_search_mode
+            movie_search_mode=movie_search_mode
         )
 
         # 먼저 현재 페이지에 필요한 movie_id만 가져온다.
@@ -143,10 +124,6 @@ def search_movies(
             return []
 
         id_placeholders = ", ".join(["%s"] * len(movie_ids))
-        director_sql, director_params = director_select_sql(
-            director=director,
-            director_search_mode=director_search_mode
-        )
 
         detail_sql = f"""
             SELECT
@@ -158,7 +135,7 @@ def search_movies(
                 m.movie_type,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') AS genre,
                 m.production_status,
-                {director_sql},
+                GROUP_CONCAT(DISTINCT d.director_name ORDER BY d.director_name SEPARATOR ', ') AS director,
                 GROUP_CONCAT(DISTINCT c.company_name ORDER BY c.company_name SEPARATOR ', ') AS production_company
             FROM movie m
             LEFT JOIN movie_director md ON m.movie_id = md.movie_id
@@ -180,7 +157,7 @@ def search_movies(
             ORDER BY FIELD(m.movie_id, {id_placeholders})
         """
 
-        cur.execute(detail_sql, director_params + movie_ids + movie_ids)
+        cur.execute(detail_sql, movie_ids + movie_ids)
         return cur.fetchall()
     finally:
         close_db(conn, cur)
@@ -191,8 +168,7 @@ def count_movies(
         director=None,
         start_year=None,
         end_year=None,
-        movie_search_mode="contains",
-        director_search_mode="contains"
+        movie_search_mode="contains"
 ):
     conn, cur = open_db()
 
@@ -205,8 +181,7 @@ def count_movies(
             director=director,
             start_year=start_year,
             end_year=end_year,
-            movie_search_mode=movie_search_mode,
-            director_search_mode=director_search_mode
+            movie_search_mode=movie_search_mode
         )
 
         if is_empty(director):

@@ -252,19 +252,6 @@
             <div class="label">ㆍ감독명</div>
             <div class="field-block">
                 <input class="text-input" type="text" name="director" value="{{ request.args.get('director', '') }}">
-                <div class="radio-group">
-                    {% set director_mode = request.args.get('director_search_mode', 'contains') %}
-                    <label>
-                        <input type="radio" name="director_search_mode" value="contains"
-                        {% if director_mode != 'prefix' %}checked{% endif %}>
-                        포함 검색
-                    </label>
-                    <label>
-                        <input type="radio" name="director_search_mode" value="prefix"
-                        {% if director_mode == 'prefix' %}checked{% endif %}>
-                        접두어 검색
-                    </label>
-                </div>
             </div>
 
             <div class="button-group">
@@ -447,14 +434,8 @@
             });
 
             const movieContains = form.querySelector("input[name='movie_search_mode'][value='contains']");
-            const directorContains = form.querySelector("input[name='director_search_mode'][value='contains']");
-
             if (movieContains) {
                 movieContains.checked = true;
-            }
-
-            if (directorContains) {
-                directorContains.checked = true;
             }
         }
     </script>

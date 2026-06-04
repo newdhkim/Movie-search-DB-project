@@ -36,7 +36,6 @@ def index():
     end_year = request.args.get("end_year")
     sort = request.args.get("sort", "update_desc")
     movie_search_mode = get_search_mode("movie_search_mode")
-    director_search_mode = get_search_mode("director_search_mode")
 
     db_error = None
 
@@ -46,8 +45,7 @@ def index():
             director=director,
             start_year=start_year,
             end_year=end_year,
-            movie_search_mode=movie_search_mode,
-            director_search_mode=director_search_mode
+            movie_search_mode=movie_search_mode
         )
         total_pages = (total_count + page_size - 1) // page_size
         total_pages = max(total_pages, 1)
@@ -61,8 +59,7 @@ def index():
             sort=sort,
             page=page,
             page_size=page_size,
-            movie_search_mode=movie_search_mode,
-            director_search_mode=director_search_mode
+            movie_search_mode=movie_search_mode
         )
     except pymysql.MySQLError as error:
         results = []
