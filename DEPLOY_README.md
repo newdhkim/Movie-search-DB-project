@@ -158,6 +158,10 @@ sudo systemctl status nginx
 
 `.github/workflows/deploy.yml`은 `main` 또는 `master` 브랜치에 push될 때 다음 순서로 실행됩니다.
 
+GitHub Actions를 이용해 push 시 Python 문법 검사를 수행하고,
+검사 통과 후 EC2 서버에 SSH 접속하여 최신 코드를 pull한 뒤
+`requirements.txt` 재설치 및 systemd 서비스 재시작을 자동화하였습니다.
+
 1. Python 파일 문법 검사
 2. EC2 서버에 SSH 접속
 3. 서버의 프로젝트 폴더에서 최신 코드 반영
