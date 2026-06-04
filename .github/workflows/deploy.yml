@@ -50,6 +50,7 @@ jobs:
         run: |
           echo "HOST length: ${#EC2_HOST}"
           echo "USER length: ${#EC2_USER}"
+          echo "KEY length: ${#EC2_SSH_KEY}"
           test -n "$EC2_HOST" || { echo "Missing GitHub Secret: EC2_HOST"; exit 1; }
           test -n "$EC2_USER" || { echo "Missing GitHub Secret: EC2_USER"; exit 1; }
           test -n "$EC2_SSH_KEY" || { echo "Missing GitHub Secret: EC2_SSH_KEY"; exit 1; }
