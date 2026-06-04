@@ -61,6 +61,22 @@ def movie_name_sql():
     return "m.movie_name"
 
 
+def director_select_sql(director=None, director_search_mode="contains"):
+    if is_empty(director):
+        return "GROUP_CONCAT(DISTINCT d.director_name ORDER BY d.director_name SEPARATOR ', ') AS director", []
+
+    return """
+                GROUP_CONCAT(
+                    DISTINCT CASE
+                        WHEN d.director_name LIKE %s THEN d.director_name
+                        ELSE NULL
+                    END
+                    ORDER BY d.director_name
+                    SEPARATOR ', '
+                ) AS director
+            """, [make_like_pattern(director, director_search_mode)]
+
+
 def sort_sql(sort):
     if sort == "year_desc":
         return "m.production_year DESC, m.movie_id DESC"
@@ -127,6 +143,10 @@ def search_movies(
             return []
 
         id_placeholders = ", ".join(["%s"] * len(movie_ids))
+        director_sql, director_params = director_select_sql(
+            director=director,
+            director_search_mode=director_search_mode
+        )
 
         detail_sql = f"""
             SELECT
@@ -138,7 +158,7 @@ def search_movies(
                 m.movie_type,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') AS genre,
                 m.production_status,
-                GROUP_CONCAT(DISTINCT d.director_name ORDER BY d.director_name SEPARATOR ', ') AS director,
+                {director_sql},
                 GROUP_CONCAT(DISTINCT c.company_name ORDER BY c.company_name SEPARATOR ', ') AS production_company
             FROM movie m
             LEFT JOIN movie_director md ON m.movie_id = md.movie_id
@@ -160,7 +180,7 @@ def search_movies(
             ORDER BY FIELD(m.movie_id, {id_placeholders})
         """
 
-        cur.execute(detail_sql, movie_ids + movie_ids)
+        cur.execute(detail_sql, director_params + movie_ids + movie_ids)
         return cur.fetchall()
     finally:
         close_db(conn, cur)
