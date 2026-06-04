@@ -43,6 +43,11 @@
             font-weight: bold;
         }
 
+        .label.top-align {
+            align-self: start;
+            padding-top: 5px;
+        }
+
         input, select {
             height: 30px;
             border: 1px solid #ccc;
@@ -64,6 +69,10 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+        }
+
+        .field-block.top-align {
+            align-self: start;
         }
 
         .radio-group {
@@ -249,8 +258,8 @@
                 </div>
             </div>
 
-            <div class="label">ㆍ감독명</div>
-            <div class="field-block">
+            <div class="label top-align">ㆍ감독명</div>
+            <div class="field-block top-align">
                 <input class="text-input" type="text" name="director" value="{{ request.args.get('director', '') }}">
             </div>
 
