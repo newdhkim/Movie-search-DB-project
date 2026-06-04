@@ -1,4 +1,4 @@
-﻿from db_connect import open_db, close_db
+from db_connect import open_db, close_db
 
 
 def is_empty(value):

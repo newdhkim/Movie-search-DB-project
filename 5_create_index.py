@@ -2,9 +2,9 @@ from db_connect import open_db, close_db
 
 
 INDEXES = [
-    ("idx_movie_name", "movie", "movie_name"),
-    ("idx_director_name", "director", "director_name"),
-    ("idx_movie_year", "movie", "production_year"),
+    ("idx_movie_name", "movie", ("movie_name",)),
+    ("idx_movie_year_id", "movie", ("production_year", "movie_id")),
+    ("idx_movie_director_director_movie", "movie_director", ("director_id", "movie_id")),
 ]
 
 
@@ -27,13 +27,14 @@ def main():
     conn, cur = open_db()
 
     try:
-        for index_name, table_name, column_name in INDEXES:
+        for index_name, table_name, column_names in INDEXES:
             if index_exists(cur, index_name, table_name):
                 print(f"{index_name}: 이미 존재")
                 continue
 
+            column_sql = ", ".join(column_names)
             cur.execute(
-                f"CREATE INDEX {index_name} ON {table_name}({column_name})"
+                f"CREATE INDEX {index_name} ON {table_name}({column_sql})"
             )
             print(f"{index_name}: 생성 완료")
 

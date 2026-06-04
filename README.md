@@ -1,4 +1,4 @@
-﻿# KOBIS Movie Search DB Project
+# KOBIS Movie Search DB Project
 
 KOBIS 영화정보 엑셀 데이터를 MySQL에 적재하고, 정규화된 영화 검색 데이터베이스와 Flask 기반 검색 화면을 구현한 데이터베이스 기말 프로젝트입니다.
 
@@ -95,11 +95,11 @@ Flask와 HTML/CSS를 사용해 영화 검색 화면을 구현했습니다.
 CREATE INDEX idx_movie_name
 ON movie(movie_name);
 
-CREATE INDEX idx_director_name
-ON director(director_name);
+CREATE INDEX idx_movie_year_id
+ON movie(production_year, movie_id);
 
-CREATE INDEX idx_movie_year
-ON movie(production_year);
+CREATE INDEX idx_movie_director_director_movie
+ON movie_director(director_id, movie_id);
 ```
 
 영화명 검색은 두 가지 방식으로 선택할 수 있습니다.
@@ -112,6 +112,8 @@ ON movie(production_year);
 포함 검색은 사용자가 기대하는 일반 검색 방식에 가깝지만, 문자열 앞부분이 와일드카드이기 때문에 B+Tree 인덱스 활용이 어렵습니다.
 
 접두어 검색은 인덱스 효과를 확인하기 위한 비교 실험용 검색 방식이며, `EXPLAIN ANALYZE`를 통해 Index Range Scan 여부를 확인할 수 있도록 구현했습니다.
+
+제작연도 검색은 범위 조건과 `movie_id` 기준 정렬을 함께 고려해 `(production_year, movie_id)` 복합 인덱스를 사용합니다. 감독명 검색은 `director` 테이블에서 이름을 찾은 뒤 `movie_director` 관계 테이블을 통해 영화로 연결되므로, 조인 경로에 맞춰 `(director_id, movie_id)` 복합 인덱스를 추가했습니다.
 
 ## 프로젝트 구조
 

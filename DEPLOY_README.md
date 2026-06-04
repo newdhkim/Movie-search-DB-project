@@ -1,4 +1,4 @@
-﻿# AWS EC2 Ubuntu 배포 가이드
+# AWS EC2 Ubuntu 배포 가이드
 
 이 프로젝트는 Flask 앱을 Gunicorn으로 `127.0.0.1:5000`에서 실행하고, 외부 접속은 Nginx 80번 포트로만 받는 구성을 사용합니다. MySQL은 같은 EC2 내부의 `localhost`를 사용합니다.
 
