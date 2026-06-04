@@ -237,6 +237,7 @@
 </div>
 
 <form method="GET" action="/">
+    <input id="form-sort" type="hidden" name="sort" value="{{ request.args.get('sort', 'update_desc') }}">
     <div class="search-area">
         <div class="search-grid">
 
@@ -312,11 +313,10 @@
 
         <select
             id="sort"
-            name="sort"
             class="sort-box"
         >
             <option value="update_desc"
-                {% if request.args.get('sort') == 'update_desc' %}
+                {% if not request.args.get('sort') or request.args.get('sort') == 'update_desc' %}
                 selected
                 {% endif %}
             >
@@ -410,9 +410,13 @@
         }
 
         const sortSelect = document.getElementById("sort");
+        const formSort = document.getElementById("form-sort");
 
         if (sortSelect) {
             sortSelect.addEventListener("change", function () {
+                if (formSort) {
+                    formSort.value = this.value;
+                }
                 const url = new URL(window.location.href);
                 url.searchParams.set("sort", this.value);
                 url.searchParams.set("page", 1);

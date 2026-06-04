@@ -59,7 +59,7 @@ def read_sheet(sheet_name):
         df.columns = COLUMNS
 
         # 혹시 첫 행에 헤더가 들어간 경우 제거
-        df = df[df["movie_name"] != "영화명"]
+        df = df[df["movie_name"].astype(str).str.strip() != "영화명"]
 
     else:
         raise ValueError(f"알 수 없는 시트명: {sheet_name}")

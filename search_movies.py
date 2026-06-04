@@ -94,6 +94,7 @@ def sort_sql(sort):
         {clean_name} ASC,
         m.movie_id DESC""".format(clean_name=clean_name)
 
+    # update_desc: movie_id follows insertion order, so newest rows sort first.
     return "m.movie_id DESC"
 
 
