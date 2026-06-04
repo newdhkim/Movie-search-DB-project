@@ -208,10 +208,3 @@ def count_movies(
         return row["total_count"]
     finally:
         close_db(conn, cur)
-
-
-
-
-
-
-
