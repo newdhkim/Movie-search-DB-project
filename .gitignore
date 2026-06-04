@@ -21,3 +21,6 @@ __pycache__/
 *.pdf
 ~$*
 artifact-build-manifest.json
+movie_db.sql
+presentation_script.md
+발표 대본.txt
