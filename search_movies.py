@@ -66,9 +66,9 @@ def sort_sql(sort):
 
     if sort == "name_asc":
         return """CASE
-            WHEN m.movie_name REGEXP '^[가-힣]' THEN 0
-            WHEN m.movie_name REGEXP '^[A-Za-z]' THEN 1
-            WHEN m.movie_name REGEXP '^[0-9]' THEN 2
+            WHEN HEX(LEFT(TRIM(m.movie_name), 1)) BETWEEN 'EAB080' AND 'ED9EA3' THEN 0
+            WHEN HEX(LEFT(UPPER(TRIM(m.movie_name)), 1)) BETWEEN '41' AND '5A' THEN 1
+            WHEN HEX(LEFT(TRIM(m.movie_name), 1)) BETWEEN '30' AND '39' THEN 2
             ELSE 3
         END,
         m.movie_name ASC,
